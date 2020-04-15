@@ -497,7 +497,9 @@ Either NAMESPACE or DIR to the wiki should be specified."
                                     :action '(point-marker)))))
             (if marker
                 (org-goto-marker-or-bmk marker)
-              (error "FIXME: Create a new file")))))
+              ;; By calling `org-multi-wiki-visit-entry', file names
+              ;; are expanded twice.
+              (org-multi-wiki-visit-entry file :namespace id)))))
       (let ((pos (or (and custom-id
                           (or (car-safe (org-ql-select (current-buffer)
                                           `(property "CUSTOM_ID" ,custom-id)
