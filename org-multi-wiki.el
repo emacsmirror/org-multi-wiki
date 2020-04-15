@@ -576,7 +576,7 @@ ORIGIN-NS is the namespae of the origin."
             "")
           basename
           (or (and (not (org-multi-wiki--top-level-link-fragments namespace))
-                   (= level 1)
+                   (and level (= level 1))
                    "")
               (and custom-id
                    (concat "::#" custom-id))
@@ -614,21 +614,26 @@ ORIGIN-NS is the namespae of the origin."
                                             (mapcar #'car alist))
                            alist)))
          headings
-         (plist (with-current-buffer
-                    (or (find-buffer-visiting file)
-                        (find-file-noselect file))
-                  (org-with-wide-buffer
-                   (goto-char (point-min))
-                   (while (re-search-forward (rx bol (+ "*") space) nil t)
-                     (push (propertize (string-trim-right (thing-at-point 'line t))
-                                       'marker (point-marker))
-                           headings))
-                   (let* ((heading (completing-read "Heading: "
-                                                    (nreverse headings)
-                                                    nil t))
-                          (marker (get-char-property 0 'marker heading)))
-                     (goto-char marker)
-                     (org-multi-wiki--get-link-data origin-ns))))))
+         (plist (if (file-exists-p file)
+                    ;; Complete a link to a heading in an existing file.
+                    (with-current-buffer
+                        (or (find-buffer-visiting file)
+                            (find-file-noselect file))
+                      (org-with-wide-buffer
+                       (goto-char (point-min))
+                       (while (re-search-forward (rx bol (+ "*") space) nil t)
+                         (push (propertize (string-trim-right (thing-at-point 'line t))
+                                           'marker (point-marker))
+                               headings))
+                       (let* ((heading (completing-read "Heading: "
+                                                        (nreverse headings)
+                                                        nil t))
+                              (marker (get-char-property 0 'marker heading)))
+                         (goto-char marker)
+                         (org-multi-wiki--get-link-data origin-ns))))
+                  ;; Generate a link to a new file.
+                  (org-multi-wiki--link-string namespace file
+                                               :origin-ns origin-ns))))
     (plist-get plist :link)))
 
 ;;;; Commands
