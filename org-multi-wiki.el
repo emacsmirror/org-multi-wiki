@@ -551,20 +551,36 @@ e.g. when `org-capture' is run."
                                       (org-set-property "CUSTOM_ID" custom-id)
                                       custom-id)))))
               (ns (plist-get plist :namespace))
-              (link (format "wiki:%s:%s%s"
-                            (if (not (and origin-ns
-                                          org-multi-wiki-allow-omit-namespace
-                                          (eq origin-ns ns)))
-                                (symbol-name ns)
-                              "")
-                            (plist-get plist :basename)
-                            (or (and (not (org-multi-wiki--top-level-link-fragments (plist-get plist :namespace)))
-                                     (= level 1)
-                                     "")
-                                (and custom-id
-                                     (concat "::#" custom-id))
-                                (concat "::*" headline)))))
+              (link (org-multi-wiki--link-string ns (plist-get plist :basename)
+                                                 :custom-id custom-id
+                                                 :headline headline
+                                                 :level level
+                                                 :origin-ns origin-ns)))
         (list :link link :headline headline)))))
+
+(cl-defun org-multi-wiki--link-string (namespace basename
+                                                 &key
+                                                 custom-id headline
+                                                 level
+                                                 origin-ns)
+  "Generate a link string (without description) to a wiki entry.
+
+NAMESPACE, BASENAME, CUSTOM-ID, and HEADLINE specify the target.
+LEVEL is the heading level of the target.
+ORIGIN-NS is the namespae of the origin."
+  (format "wiki:%s:%s%s"
+          (if (not (and origin-ns
+                        org-multi-wiki-allow-omit-namespace
+                        (eq origin-ns namespace)))
+              (symbol-name namespace)
+            "")
+          basename
+          (or (and (not (org-multi-wiki--top-level-link-fragments namespace))
+                   (= level 1)
+                   "")
+              (and custom-id
+                   (concat "::#" custom-id))
+              (concat "::*" headline))))
 
 (defun org-multi-wiki-strip-namespace (link)
   "Strip namespace from LINK if possible."
