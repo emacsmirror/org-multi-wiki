@@ -472,17 +472,17 @@ Either NAMESPACE or DIR to the wiki should be specified."
                                         (and "*" (group-n 4 (+ anything)))))
                           eol)
                       link)
-    (let* ((id (if (string-empty-p (match-string 1 link))
+    (let* ((namespace (if (string-empty-p (match-string 1 link))
                    (save-match-data
                      (org-multi-wiki--current-namespace))
                  (intern (match-string 1 link))))
            (basename (match-string 2 link))
            (custom-id (match-string 3 link))
            (headline (match-string 4 link))
-           (info (assoc id org-multi-wiki-namespace-list #'eq))
+           (info (assoc namespace org-multi-wiki-namespace-list #'eq))
            (root (if info
                      (nth 1 info)
-                   (user-error "Wiki directory for %s is undefined" id)))
+                   (user-error "Wiki directory for %s is undefined" namespace)))
            (file (or (cl-find-if #'file-exists-p
                                  (org-multi-wiki-expand-org-file-names root basename))
                      (cl-find-if #'file-exists-p
@@ -491,7 +491,7 @@ Either NAMESPACE or DIR to the wiki should be specified."
                                   (funcall org-multi-wiki-escape-file-name-fn basename))))))
       (cond
        (file (find-file file))
-       (t (let ((marker (car-safe (org-ql-select (org-multi-wiki-entry-files id)
+       (t (let ((marker (car-safe (org-ql-select (org-multi-wiki-entry-files namespace)
                                     `(and (level 1)
                                           (heading ,headline))
                                     :action '(point-marker)))))
@@ -499,7 +499,7 @@ Either NAMESPACE or DIR to the wiki should be specified."
                 (org-goto-marker-or-bmk marker)
               ;; By calling `org-multi-wiki-visit-entry', file names
               ;; are expanded twice.
-              (org-multi-wiki-visit-entry file :namespace id)))))
+              (org-multi-wiki-visit-entry file :namespace namespace)))))
       (let ((pos (or (and custom-id
                           (or (car-safe (org-ql-select (current-buffer)
                                           `(property "CUSTOM_ID" ,custom-id)
